@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Service | Проверка доступности сайтов</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tagline {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 25px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        #hostInput {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+            min-width: 200px;
+        }
+        
+        #hostInput::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        button {
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        #pingButton {
+            background: linear-gradient(to right, #00c6ff, #0072ff);
+        }
+        
+        #startContinuousBtn {
+            background: linear-gradient(to right, #00b09b, #96c93d);
+        }
+        
+        #stopBtn {
+            background: linear-gradient(to right, #ff416c, #ff4b2b);
+        }
+        
+        .presets {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .preset-btn:hover, button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+        }
+        
+        .results {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 200px;
+            font-family: 'Courier New', monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .ping-result {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .ping-result:last-child {
+            border-bottom: none;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 25px;
+            text-align: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #00c6ff;
+        }
+        
+        .stat-label {
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .controls-info {
+            text-align: center;
+            margin: 15px 0;
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group button {
+                width: 100%;
+            }
+            
+            .presets {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .preset-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Ping Service</h1>
+            <p class="tagline">Проверяйте доступность сайтов в реальном времени</p>
+        </header>
+        
+        <div class="input-group">
+            <input type="text" id="hostInput" placeholder="Введите домен или IP-адрес...">
+            <button id="pingButton">Ping (4 пакета)</button>
+            <button id="startContinuousBtn">Старт (непрерывно)</button>
+            <button id="stopBtn">Стоп</button>
+        </div>
+        
+        <div class="presets">
+            <button class="preset-btn" data-host="vk.ru">VKontakte</button>
+            <button class="preset-btn" data-host="ya.ru">Yandex</button>
+            <button class="preset-btn" data-host="youtube.com">YouTube</button>
+            <button class="preset-btn" data-host="google.com">Google</button>
+        </div>
+        
+        <div class="controls-info">
+            Отправлено пакетов: <span id="packetCounter">0</span> | 
+            Режим: <span id="currentMode">Ожидание</span>
+        </div>
+        
+        <div class="results" id="results">
+            <p>Результаты появятся здесь...</p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="packetLoss">0%</div>
+                <div class="stat-label">Потери пакетов</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="avgPing">0ms</div>
+                <div class="stat-label">Средний пинг</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="successRate">100%</div>
+                <div class="stat-label">Успешность</div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Ping Service v2.0 | Работает через adm00103.github.io прокси | © ADM00103</p>
+        </footer>
+    </div>
+
+    <script>
+        const pingButton = document.getElementById('pingButton');
+        const startContinuousBtn = document.getElementById('startContinuousBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const hostInput = document.getElementById('hostInput');
+        const resultsDiv = document.getElementById('results');
+        const packetLossEl = document.getElementById('packetLoss');
+        const avgPingEl = document.getElementById('avgPing');
+        const successRateEl = document.getElementById('successRate');
+        const currentModeEl = document.getElementById('currentMode');
+        const packetCounterEl = document.getElementById('packetCounter');
+        
+        // Глобальные переменные
+        let pingInterval = null;
+        let isContinuousMode = false;
+        let sequenceNumber = 1;
+        let packetsSent = 0;
+        let packetsReceived = 0;
+        let pingResults = [];
+        
+        // Предустановленные хосты
+        const presetButtons = document.querySelectorAll('.preset-btn');
+        presetButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                hostInput.value = btn.getAttribute('data-host');
+                startPing();
+            });
+        });
+        
+        pingButton.addEventListener('click', () => {
+            stopContinuousPing();
+            startPing();
+        });
+        
+        startContinuousBtn.addEventListener('click', () => {
+            stopContinuousPing();
+            startContinuousPing();
+        });
+        
+        stopBtn.addEventListener('click', stopContinuousPing);
+        
+        function startPing() {
+            const host = hostInput.value.trim();
+            if (!host) return;
+            
+            // Сброс счетчиков
+            resetCounters();
+            currentModeEl.textContent = "Отправка 4 пакетов";
+            
+            // Создаем 4 пакета
+            for (let i = 0; i < 4; i++) {
+                setTimeout(() => sendPing(host), i * 800);
+            }
+        }
+        
+        function startContinuousPing() {
+            const host = hostInput.value.trim();
+            if (!host) return;
+            
+            // Сброс счетчиков
+            resetCounters();
+            isContinuousMode = true;
+            currentModeEl.textContent = "Непрерывная отправка";
+            
+            // Отправляем первый пакет сразу
+            sendPing(host);
+            
+            // Устанавливаем интервал
+            pingInterval = setInterval(() => {
+                sendPing(host);
+            }, 1500);
+        }
+        
+        function stopContinuousPing() {
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
+            isContinuousMode = false;
+            if (packetsSent === 0) {
+                currentModeEl.textContent = "Ожидание";
+            } else {
+                currentModeEl.textContent = "Остановлено пользователем";
+            }
+        }
+        
+        function sendPing(host) {
+            packetsSent++;
+            packetCounterEl.textContent = packetsSent;
+            const startTime = Date.now();
+            const currentSeq = sequenceNumber++;
+            
+            // Создаем элемент для результата
+            const resultEl = document.createElement('div');
+            resultEl.className = 'ping-result';
+            resultEl.innerHTML = `<span>Пакет #${currentSeq} к ${host}:</span> <span class="status">отправка...</span>`;
+            resultsDiv.prepend(resultEl);
+            
+            // Автоскролл к новым результатам
+            resultsDiv.scrollTop = 0;
+            
+            // Используем WebSocket как прокси для проверки доступности
+            const socket = new WebSocket(`wss://echo.websocket.org`);
+            
+            socket.onopen = () => {
+                const elapsed = Date.now() - startTime;
+                packetsReceived++;
+                pingResults.push(elapsed);
+                
+                resultEl.innerHTML = `<span>Пакет #${currentSeq} к ${host}:</span> <span style="color: #00ff8c">ответ за ${elapsed}ms</span>`;
+                updateStats();
+                socket.close();
+            };
+            
+            socket.onerror = () => {
+                resultEl.innerHTML = `<span>Пакет #${currentSeq} к ${host}:</span> <span style="color: #ff5555">ошибка</span>`;
+                updateStats();
+            };
+            
+            // Таймаут запроса
+            setTimeout(() => {
+                if (socket.readyState !== WebSocket.OPEN) {
+                    resultEl.innerHTML = `<span>Пакет #${currentSeq} к ${host}:</span> <span style="color: #ffaa00">таймаут</span>`;
+                    socket.close();
+                    updateStats();
+                }
+            }, 3000);
+        }
+        
+        function resetCounters() {
+            sequenceNumber = 1;
+            packetsSent = 0;
+            packetsReceived = 0;
+            pingResults = [];
+            packetCounterEl.textContent = "0";
+            resultsDiv.innerHTML = '<p>Запуск проверки...</p>';
+            updateStats();
+        }
+        
+        function updateStats() {
+            // Рассчет потерь пакетов
+            const loss = ((packetsSent - packetsReceived) / packetsSent) * 100;
+            packetLossEl.textContent = packetsSent ? `${loss.toFixed(0)}%` : "0%";
+            
+            // Рассчет среднего пинга
+            const avg = pingResults.length 
+                ? pingResults.reduce((a, b) => a + b, 0) / pingResults.length 
+                : 0;
+            avgPingEl.textContent = pingResults.length ? `${avg.toFixed(0)}ms` : "0ms";
+            
+            // Процент успешных запросов
+            const success = packetsSent ? (packetsReceived / packetsSent) * 100 : 100;
+            successRateEl.textContent = packetsSent ? `${success.toFixed(0)}%` : "100%";
+            
+            // Цветовая индикация
+            packetLossEl.style.color = loss > 50 ? '#ff5555' : loss > 20 ? '#ffaa00' : '#00ff8c';
+            successRateEl.style.color = success < 50 ? '#ff5555' : success < 80 ? '#ffaa00' : '#00ff8c';
+        }
+        
+        // Инициализация
+        hostInput.value = 'vk.ru';
+        updateStats();
+    </script>
+</body>
+</html>

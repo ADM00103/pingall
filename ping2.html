@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ping Monitor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px;
+        }
+        .stats {
+            text-align: left;
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>📡 Ping Monitor</h1>
+    
+    <div class="controls">
+        <select id="serverSelect">
+            <option value="vk.ru">vk.ru</option>
+            <option value="ya.ru">ya.ru</option>
+            <option value="youtube.com">youtube.com</option>
+        </select>
+        <button onclick="startPing()" id="startBtn">Старт</button>
+        <button onclick="stopPing()" id="stopBtn" disabled>Стоп</button>
+    </div>
+
+    <div class="stats">
+        <p>Отправлено: <span id="sent">0</span></p>
+        <p>Потеряно: <span id="lost">0</span></p>
+        <p>Мин. задержка: <span id="min">--</span> мс</p>
+        <p>Средн. задержка: <span id="avg">--</span> мс</p>
+        <p>Макс. задержка: <span id="max">--</span> мс</p>
+    </div>
+
+    <script>
+        let sent = 0;
+        let lost = 0;
+        let latencies = [];
+        let intervalId = null;
+
+        function getRandomLatency() {
+            // Эмуляция случайной задержки (в реальном приложении здесь будет логика пинга)
+            return Math.floor(Math.random() * 100) + 30; // 30-130 мс
+        }
+
+        function startPing() {
+            if (intervalId) return; // Защита от повторного запуска
+
+            const server = document.getElementById('serverSelect').value;
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+
+            intervalId = setInterval(() => {
+                sent++;
+                // 10% вероятности потери пакета
+                if (Math.random() < 0.1) {
+                    lost++;
+                    document.getElementById('lost').textContent = lost;
+                } else {
+                    const latency = getRandomLatency();
+                    latencies.push(latency);
+                    
+                    // Обновляем статистику
+                    document.getElementById('sent').textContent = sent;
+                    document.getElementById('min').textContent = latencies.length > 0 ? Math.min(...latencies) : '--';
+                    document.getElementById('max').textContent = latencies.length > 0 ? Math.max(...latencies) : '--';
+                    const avg = latencies.length > 0 
+                        ? (latencies.reduce((a, b) => a + b, 0) / latencies.length).toFixed(1) 
+                        : '--';
+                    document.getElementById('avg').textContent = avg;
+                }
+            }, 500); // Отправка пакета каждые 500 мс
+        }
+
+        function stopPing() {
+            if (intervalId) {
+                clearInterval(intervalId);
+                intervalId = null;
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('stopBtn').disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
